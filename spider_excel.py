@@ -1,27 +1,23 @@
 # coding = utf-8
 # @Time : 2020.7.14
 # @Author : Ray_oh
-# @File : spider.py
+# @File : spider_db.py
 # @Software: PyCharm
 
 from bs4 import BeautifulSoup  # 网页解析，获取数据
 import re  # 正则表达式，进行文字匹配
 import urllib.request, urllib.error  # 制定URL，获取网页数据
 import xlwt  # 进行excel操作
-import sqlite3  # 进行SQLite数据库操作
 
 
 def main():
     baseurl = "https://movie.douban.com/top250?start="
     # 1.爬取网页
     datalist = getData(baseurl)
+    # 2.保存路径
     savepath = "豆瓣电影Top250.xls"
-    #dbpath = "movie.db"
     # 3.保存数据
     saveData(datalist,savepath)
-    #saveData2DB(datalist, dbpath)
-
-    # askURL("https://movie.douban.com/top250?start=")
 
 
 # 影片详情链接的规则
@@ -129,51 +125,6 @@ def saveData(datalist, savepath):
             sheet.write(i + 1, j, data[j])  # 数据
 
     book.save(savepath)  # 保存
-
-
-def saveData2DB(datalist, dbpath):
-    init_db(dbpath)
-    conn = sqlite3.connect(dbpath)
-    cur = conn.cursor()
-
-    for data in datalist:
-        for index in range(len(data)):
-            if index == 4 or index == 5:
-                continue
-            data[index] = '"' + data[index] + '"'
-        sql = '''
-                insert into movie250 (
-                info_link,pic_link,cname,ename,score,rated,instroduction,info) 
-                values(%s)''' % ",".join(data)
-        print(sql)
-        cur.execute(sql)
-        conn.commit()
-    cur.close()
-    conn.close()
-
-
-def init_db(dbpath):
-    sql = '''
-        create table movie250 
-        (
-        id integer primary key autoincrement,
-        info_link text,
-        pic_link text,
-        cname varchar, 
-        ename varchar,
-        score numeric ,
-        rated numeric ,
-        instroduction text,
-        info text
-        )
-
-    '''  # 创建数据表
-    conn = sqlite3.connect(dbpath)
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    conn.commit()
-    conn.close()
-
 
 if __name__ == "__main__":  # 当程序执行时
     # 调用函数

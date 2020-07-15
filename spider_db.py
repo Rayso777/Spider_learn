@@ -1,7 +1,7 @@
 #-*- codeing = utf-8 -*-
 #@Time : 2020.7.14
 #@Author : Ray_oh
-#@File : spider.py
+#@File : spider_db.py
 #@Software: PyCharm
 
 from bs4 import BeautifulSoup     #网页解析，获取数据
@@ -16,13 +16,10 @@ def main():
     baseurl = "https://movie.douban.com/top250?start="
     #1.爬取网页
     datalist = getData(baseurl)
-    #savepath = "豆瓣电影Top250.xls"
+    #2.存取路径
     dbpath = "movie.db"
     #3.保存数据
-    #saveData(datalist,savepath)
     saveData2DB(datalist,dbpath)
-
-    #askURL("https://movie.douban.com/top250?start=")
 
 #影片详情链接的规则
 findLink = re.compile(r'<a href="(.*?)">')     #创建正则表达式对象，表示规则（字符串的模式）
@@ -94,8 +91,6 @@ def getData(baseurl):
 
     return datalist
 
-
-埃森哲
 #得到指定一个URL的网页内容
 def askURL(url):
     head = {                #模拟浏览器头部信息，向豆瓣服务器发送消息
@@ -117,24 +112,27 @@ def askURL(url):
     return html
 
 
+def init_db(dbpath):
+    sql = '''
+        create table movie250 
+        (
+        id integer primary key autoincrement,
+        info_link text,
+        pic_link text,
+        cname varchar, 
+        ename varchar,
+        score numeric ,
+        rated numeric ,
+        instroduction text,
+        info text
+        )
 
-
-#保存数据
-def saveData(datalist,savepath):
-    print("save....")
-    book = xlwt.Workbook(encoding="utf-8",style_compression=0)  #创建workbook对象
-    sheet = book.add_sheet('豆瓣电影Top250',cell_overwrite_ok=True)    #创建工作表
-    col = ("电影详情链接","图片链接","影片中文名","影片外国名","评分","评价数","概况","相关信息")
-    for i in range(0,8):
-        sheet.write(0,i,col[i]) #列名
-    for i in range(0,250):
-        print("第%d条" %(i+1))
-        data = datalist[i]
-        for j in range(0,8):
-            sheet.write(i+1,j,data[j])      #数据
-
-    book.save(savepath)       #保存
-
+    '''  # 创建数据表
+    conn = sqlite3.connect(dbpath)
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    conn.commit()
+    conn.close()
 
 def saveData2DB(datalist,dbpath):
     init_db(dbpath)
@@ -150,7 +148,7 @@ def saveData2DB(datalist,dbpath):
                 insert into movie250 (
                 info_link,pic_link,cname,ename,score,rated,instroduction,info) 
                 values(%s)'''%",".join(data)
-        print(sql)
+        #print(sql)
         cur.execute(sql)
         conn.commit()
     cur.close()
@@ -158,36 +156,7 @@ def saveData2DB(datalist,dbpath):
 
 
 
-
-
-
-
-def init_db(dbpath):
-    sql = '''
-        create table movie250 
-        (
-        id integer primary key autoincrement,
-        info_link text,
-        pic_link text,
-        cname varchar, 
-        ename varchar,
-        score numeric ,
-        rated numeric ,
-        instroduction text,
-        info text
-        )
-    
-    '''  #创建数据表
-    conn = sqlite3.connect(dbpath)
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    conn.commit()
-    conn.close()
-
-
-
 if __name__ == "__main__":          #当程序执行时
 #调用函数
     main()
-    #init_db("movietest.db")
     print("爬取完毕！")
